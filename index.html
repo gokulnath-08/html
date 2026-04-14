@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Interactive GitHub Release Test</title>
+    <title>Fluid Wake Release Test</title>
     <style>
         body {
             font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Helvetica, Arial, sans-serif;
@@ -15,31 +15,33 @@
             margin: 0;
             background-color: #f6f8fa; /* GitHub light background */
             color: #24292f;
-            overflow: hidden; /* Prevent scrollbars from the canvas */
+            overflow: hidden;
         }
         
-        /* The canvas sits in the background */
-        #wave-canvas {
+        /* The canvas for the fluid effect */
+        #fluid-canvas {
             position: fixed;
             top: 0;
             left: 0;
             width: 100vw;
             height: 100vh;
             z-index: 0;
-            pointer-events: none; /* Allows clicks to pass through to the document */
+            pointer-events: none;
+            /* Adds a slight blur to make the particles look like continuous liquid */
+            filter: blur(3px); 
         }
 
-        /* The main content box */
         .container {
             position: relative;
-            z-index: 1; /* Keeps the box above the waves */
+            z-index: 1;
             text-align: center;
             padding: 2.5rem;
-            background: rgba(255, 255, 255, 0.9); /* Slightly transparent white */
-            backdrop-filter: blur(5px); /* Nice glass effect over the waves */
+            background: rgba(255, 255, 255, 0.85);
+            backdrop-filter: blur(8px);
             border-radius: 8px;
             box-shadow: 0 4px 12px rgba(0,0,0,0.1);
             border: 1px solid #d0d7de;
+            pointer-events: none; /* Let the mouse interact with the canvas behind the box too */
         }
         
         h1 {
@@ -55,23 +57,24 @@
 </head>
 <body>
 
-    <canvas id="wave-canvas"></canvas>
+    <canvas id="fluid-canvas"></canvas>
 
     <div class="container">
-        <h1>🌊 Interactive Test Successful!</h1>
-        <p>Move your mouse or click anywhere to see the waves.</p>
+        <h1>🌊 Fluid Wake Test</h1>
+        <p>Swish your mouse around the screen like a hand in water.</p>
         <p style="margin-top: 10px; color: #57606a; font-size: 0.9rem;">
-            This file contains built-in HTML, CSS, and JS for testing.
+            The faster you move, the wider and more turbulent the wake becomes.
         </p>
     </div>
 
     <script>
-        const canvas = document.getElementById('wave-canvas');
+        const canvas = document.getElementById('fluid-canvas');
         const ctx = canvas.getContext('2d');
         let width, height;
-        let ripples = [];
+        let particles = [];
+        let lastMouse = { x: window.innerWidth / 2, y: window.innerHeight / 2 };
 
-        // Set canvas to full window size
+        // Resize canvas to fit window
         function resize() {
             width = canvas.width = window.innerWidth;
             height = canvas.height = window.innerHeight;
@@ -79,58 +82,65 @@
         window.addEventListener('resize', resize);
         resize();
 
-        // Function to spawn a new wave/ripple
-        function createRipple(x, y, isClick) {
-            ripples.push({
-                x: x,
-                y: y,
-                radius: 0,
-                maxRadius: isClick ? 200 : 60, // Clicks make bigger waves
-                alpha: 1,
-                speed: isClick ? 4 : 2,        // Clicks expand faster
-                lineWidth: isClick ? 3 : 1
-            });
-        }
-
-        // Hover effect
+        // Track mouse movement to create the fluid wake
         window.addEventListener('mousemove', (e) => {
-            // Only create a ripple occasionally to prevent lagging
-            if(Math.random() > 0.6) {
-                createRipple(e.clientX, e.clientY, false);
-            }
-        });
+            // Calculate mouse speed and direction
+            let dx = e.clientX - lastMouse.x;
+            let dy = e.clientY - lastMouse.y;
+            let speed = Math.sqrt(dx * dx + dy * dy);
+            
+            // Limit the number of particles so it doesn't lag
+            let particleCount = Math.min(Math.floor(speed / 3), 15);
 
-        // Click effect
-        window.addEventListener('click', (e) => {
-            createRipple(e.clientX, e.clientY, true);
+            for (let i = 0; i < particleCount; i++) {
+                particles.push({
+                    x: e.clientX,
+                    y: e.clientY,
+                    // Push particles slightly outward and backward relative to mouse movement
+                    vx: (Math.random() - 0.5) * speed * 0.15 - (dx * 0.02),
+                    vy: (Math.random() - 0.5) * speed * 0.15 - (dy * 0.02),
+                    life: 1, // Starts at 1, fades to 0
+                    size: Math.random() * 20 + 15 // Random droplet sizes
+                });
+            }
+
+            lastMouse.x = e.clientX;
+            lastMouse.y = e.clientY;
         });
 
         // Animation loop
         function draw() {
+            // Clear the canvas
             ctx.clearRect(0, 0, width, height);
             
-            for (let i = 0; i < ripples.length; i++) {
-                let r = ripples[i];
+            for (let i = 0; i < particles.length; i++) {
+                let p = particles[i];
                 
+                // Draw the fluid particle
                 ctx.beginPath();
-                ctx.arc(r.x, r.y, r.radius, 0, Math.PI * 2);
-                // Color matches the blue GitHub theme
-                ctx.strokeStyle = `rgba(9, 105, 218, ${r.alpha})`; 
-                ctx.lineWidth = r.lineWidth;
-                ctx.stroke();
+                ctx.arc(p.x, p.y, p.size, 0, Math.PI * 2);
+                ctx.fillStyle = `rgba(9, 105, 218, ${p.life * 0.5})`; // GitHub blue, fading out
+                ctx.fill();
 
-                // Expand and fade out the wave
-                r.radius += r.speed;
-                r.alpha -= r.speed / r.maxRadius; 
+                // Move the particle
+                p.x += p.vx;
+                p.y += p.vy;
+                
+                // Slow the particle down over time (water friction)
+                p.vx *= 0.95;
+                p.vy *= 0.95;
+                
+                // Fade out and shrink
+                p.life -= 0.015;
+                p.size *= 0.98;
             }
             
-            // Remove ripples that have completely faded out
-            ripples = ripples.filter(r => r.alpha > 0);
+            // Remove particles that have disappeared
+            particles = particles.filter(p => p.life > 0.01);
             
             requestAnimationFrame(draw);
         }
         
-        // Start the animation
         draw();
     </script>
 </body>
