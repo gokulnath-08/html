@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>GitHub Release Test</title>
+    <title>Interactive GitHub Release Test</title>
     <style>
         body {
             font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Helvetica, Arial, sans-serif;
@@ -15,19 +15,38 @@
             margin: 0;
             background-color: #f6f8fa; /* GitHub light background */
             color: #24292f;
+            overflow: hidden; /* Prevent scrollbars from the canvas */
         }
+        
+        /* The canvas sits in the background */
+        #wave-canvas {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100vw;
+            height: 100vh;
+            z-index: 0;
+            pointer-events: none; /* Allows clicks to pass through to the document */
+        }
+
+        /* The main content box */
         .container {
+            position: relative;
+            z-index: 1; /* Keeps the box above the waves */
             text-align: center;
             padding: 2.5rem;
-            background: white;
+            background: rgba(255, 255, 255, 0.9); /* Slightly transparent white */
+            backdrop-filter: blur(5px); /* Nice glass effect over the waves */
             border-radius: 8px;
             box-shadow: 0 4px 12px rgba(0,0,0,0.1);
             border: 1px solid #d0d7de;
         }
+        
         h1 {
-            color: #0969da; /* GitHub link blue */
+            color: #0969da;
             margin-top: 0;
         }
+        
         p {
             margin-bottom: 0;
             font-size: 1.1rem;
@@ -35,12 +54,84 @@
     </style>
 </head>
 <body>
+
+    <canvas id="wave-canvas"></canvas>
+
     <div class="container">
-        <h1>🎉 Test Successful!</h1>
-        <p>This is a simple HTML file attached to a GitHub Release.</p>
+        <h1>🌊 Interactive Test Successful!</h1>
+        <p>Move your mouse or click anywhere to see the waves.</p>
         <p style="margin-top: 10px; color: #57606a; font-size: 0.9rem;">
-            If you are reading this in your browser, the download and rendering worked perfectly.
+            This file contains built-in HTML, CSS, and JS for testing.
         </p>
     </div>
+
+    <script>
+        const canvas = document.getElementById('wave-canvas');
+        const ctx = canvas.getContext('2d');
+        let width, height;
+        let ripples = [];
+
+        // Set canvas to full window size
+        function resize() {
+            width = canvas.width = window.innerWidth;
+            height = canvas.height = window.innerHeight;
+        }
+        window.addEventListener('resize', resize);
+        resize();
+
+        // Function to spawn a new wave/ripple
+        function createRipple(x, y, isClick) {
+            ripples.push({
+                x: x,
+                y: y,
+                radius: 0,
+                maxRadius: isClick ? 200 : 60, // Clicks make bigger waves
+                alpha: 1,
+                speed: isClick ? 4 : 2,        // Clicks expand faster
+                lineWidth: isClick ? 3 : 1
+            });
+        }
+
+        // Hover effect
+        window.addEventListener('mousemove', (e) => {
+            // Only create a ripple occasionally to prevent lagging
+            if(Math.random() > 0.6) {
+                createRipple(e.clientX, e.clientY, false);
+            }
+        });
+
+        // Click effect
+        window.addEventListener('click', (e) => {
+            createRipple(e.clientX, e.clientY, true);
+        });
+
+        // Animation loop
+        function draw() {
+            ctx.clearRect(0, 0, width, height);
+            
+            for (let i = 0; i < ripples.length; i++) {
+                let r = ripples[i];
+                
+                ctx.beginPath();
+                ctx.arc(r.x, r.y, r.radius, 0, Math.PI * 2);
+                // Color matches the blue GitHub theme
+                ctx.strokeStyle = `rgba(9, 105, 218, ${r.alpha})`; 
+                ctx.lineWidth = r.lineWidth;
+                ctx.stroke();
+
+                // Expand and fade out the wave
+                r.radius += r.speed;
+                r.alpha -= r.speed / r.maxRadius; 
+            }
+            
+            // Remove ripples that have completely faded out
+            ripples = ripples.filter(r => r.alpha > 0);
+            
+            requestAnimationFrame(draw);
+        }
+        
+        // Start the animation
+        draw();
+    </script>
 </body>
 </html>
