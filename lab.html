@@ -1,0 +1,210 @@
+<!DOCTYPE html><html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>Blockchain Lab Experiments (4–9)</title>
+<meta name="viewport" content="width=device-width, initial-scale=1.0"><style>
+body {
+    font-family: Arial, sans-serif;
+    background: #0f172a;
+    color: #e2e8f0;
+    margin: 0;
+}
+
+header {
+    background: #1e293b;
+    padding: 15px;
+    text-align: center;
+    font-size: 22px;
+    font-weight: bold;
+}
+
+.container {
+    padding: 20px;
+    max-width: 900px;
+    margin: auto;
+}
+
+.card {
+    background: #1e293b;
+    padding: 15px;
+    margin-bottom: 20px;
+    border-radius: 12px;
+}
+
+.title {
+    font-size: 18px;
+    margin-bottom: 10px;
+    color: #38bdf8;
+}
+
+pre {
+    background: #020617;
+    padding: 12px;
+    border-radius: 8px;
+    overflow-x: auto;
+}
+
+button {
+    margin-top: 10px;
+    padding: 6px 12px;
+    border: none;
+    border-radius: 6px;
+    background: #38bdf8;
+    color: black;
+    cursor: pointer;
+}
+</style></head><body><header>📘 Blockchain Lab Experiments (4–9)</header><div class="container"><!-- EXP 4 --><div class="card">
+<div class="title">EX 04 – Hello World (Sawtooth)</div>
+<pre id="code4">
+const { TransactionProcessor } = require('sawtooth-sdk/processor');
+const crypto = require('crypto');const FAMILY_NAME = 'hello_world';
+const PREFIX = crypto.createHash('sha512')
+.update(FAMILY_NAME).digest('hex').slice(0,6);
+
+const handler = (transaction, context) => {
+const payload = transaction.payload.toString();
+console.log("Received:", payload);
+return Promise.resolve();
+};
+
+const processor = new TransactionProcessor('tcp://localhost:4004');
+processor.addHandler(handler, [PREFIX]);
+processor.start();
+</pre>
+<button onclick="copyCode('code4')">Copy</button>
+
+</div><!-- EXP 5 --><div class="card">
+<div class="title">EX 05 – Certificate DApp</div>
+<pre id="code5">
+pragma solidity ^0.8.20;contract Certificate {
+address public admin = msg.sender;
+
+struct Cert {
+    string name;
+    string course;
+    string grade;
+    string date;
+}
+
+mapping(uint => Cert) public certs;
+
+function issue(uint id, string memory n, string memory c, string memory g, string memory d) public {
+    require(msg.sender == admin);
+    certs[id] = Cert(n,c,g,d);
+}
+
+function get(uint id) public view returns (string memory,string memory,string memory,string memory) {
+    Cert memory c = certs[id];
+    return (c.name,c.course,c.grade,c.date);
+}
+
+}
+</pre>
+<button onclick="copyCode('code5')">Copy</button>
+
+</div><!-- EXP 6 --><div class="card">
+<div class="title">EX 06 – Clinical Trial</div>
+<pre id="code6">
+pragma solidity ^0.8.0;contract ClinicalTrial {
+struct Participant {
+string name;
+string data;
+}
+
+mapping(uint => Participant) public p;
+
+function enroll(uint id, string memory name) public {
+    p[id].name = name;
+}
+
+function record(uint id, string memory data) public {
+    p[id].data = data;
+}
+
+function get(uint id) public view returns(string memory,string memory){
+    return (p[id].name, p[id].data);
+}
+
+}
+</pre>
+<button onclick="copyCode('code6')">Copy</button>
+
+</div><!-- EXP 7 --><div class="card">
+<div class="title">EX 07 – Land Registration</div>
+<pre id="code7">
+pragma solidity ^0.8.0;contract Land {
+struct Record {
+string owner;
+string location;
+}
+
+mapping(uint => Record) public lands;
+
+function register(uint id, string memory owner, string memory loc) public {
+    lands[id] = Record(owner, loc);
+}
+
+function get(uint id) public view returns(string memory,string memory){
+    return (lands[id].owner, lands[id].location);
+}
+
+}
+</pre>
+<button onclick="copyCode('code7')">Copy</button>
+
+</div><!-- EXP 8 --><div class="card">
+<div class="title">EX 08 – Smart Toll System</div>
+<pre id="code8">
+pragma solidity ^0.8.0;contract Toll {
+mapping(address => uint) public balance;
+
+function register() public {
+    balance[msg.sender] = 100;
+}
+
+function pay(uint amt) public {
+    require(balance[msg.sender] >= amt);
+    balance[msg.sender] -= amt;
+}
+
+function getBalance() public view returns(uint){
+    return balance[msg.sender];
+}
+
+}
+</pre>
+<button onclick="copyCode('code8')">Copy</button>
+
+</div><!-- EXP 9 --><div class="card">
+<div class="title">EX 09 – Web3 Interaction</div>
+<pre id="code9">
+const web3 = new Web3(window.ethereum);
+await window.ethereum.request({ method: 'eth_requestAccounts' });const contract = new web3.eth.Contract(ABI, ADDRESS);
+
+// read
+await contract.methods.get().call();
+
+// write
+await contract.methods.set(5).send({from: account});
+</pre>
+<button onclick="copyCode('code9')">Copy</button>
+
+</div><!-- SHARE --><div class="card">
+<div class="title">📤 Share This File</div>
+<button onclick="downloadHTML()">Download HTML</button>
+</div></div><script>
+function copyCode(id){
+    const text = document.getElementById(id).innerText;
+    navigator.clipboard.writeText(text);
+    alert("Copied!");
+}
+
+function downloadHTML(){
+    const blob = new Blob([document.documentElement.outerHTML], {type:"text/html"});
+    const a = document.createElement("a");
+    a.href = URL.createObjectURL(blob);
+    a.download = "blockchain_lab.html";
+    a.click();
+}
+</script></body>
+</html>
