@@ -1,106 +1,22 @@
 <!DOCTYPE html>
 <html>
 <head>
-    <title>Scrollable PDF Viewer</title>
-
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.min.js"></script>
-
+    <title>PDF Viewer</title>
     <style>
-        body {
+        html, body {
             margin: 0;
-            background: #e5e5e5;
-            font-family: Arial;
+            height: 100%;
         }
-
-        #toolbar {
-            position: fixed;
-            top: 0;
+        iframe {
             width: 100%;
-            background: #222;
-            color: white;
-            padding: 10px;
-            z-index: 1000;
-        }
-
-        #viewer {
-            margin-top: 60px;
-        }
-
-        canvas {
-            display: block;
-            margin: 15px auto;
-            background: white;
-            box-shadow: 0 0 5px rgba(0,0,0,0.3);
-        }
-
-        button {
-            padding: 6px 12px;
-            margin-right: 10px;
-            cursor: pointer;
+            height: 100%;
+            border: none;
         }
     </style>
 </head>
-
 <body>
 
-<div id="toolbar">
-    <button onclick="zoomOut()">➖ Zoom</button>
-    <button onclick="zoomIn()">➕ Zoom</button>
-</div>
-
-<div id="viewer"></div>
-
-<script>
-const url = "record.pdf";
-
-let pdfDoc = null;
-let scale = 1.3;
-
-pdfjsLib.getDocument(url).promise.then(pdf => {
-    pdfDoc = pdf;
-
-    renderAllPages();
-});
-
-function renderAllPages() {
-    const viewer = document.getElementById("viewer");
-    viewer.innerHTML = ""; // clear before re-render
-
-    for (let i = 1; i <= pdfDoc.numPages; i++) {
-        renderPage(i);
-    }
-}
-
-function renderPage(num) {
-    pdfDoc.getPage(num).then(page => {
-        const viewport = page.getViewport({ scale });
-
-        const canvas = document.createElement("canvas");
-        const ctx = canvas.getContext("2d");
-
-        canvas.height = viewport.height;
-        canvas.width = viewport.width;
-
-        document.getElementById("viewer").appendChild(canvas);
-
-        page.render({
-            canvasContext: ctx,
-            viewport: viewport
-        });
-    });
-}
-
-function zoomIn() {
-    scale += 0.2;
-    renderAllPages();
-}
-
-function zoomOut() {
-    if (scale <= 0.6) return;
-    scale -= 0.2;
-    renderAllPages();
-}
-</script>
+<iframe src="record.pdf#toolbar=1"></iframe>
 
 </body>
 </html>
