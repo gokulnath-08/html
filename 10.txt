@@ -1,0 +1,309 @@
+PROJECT: ASP.NET Core MVC – CRUD with Entity Framework Core
+
+FILE STRUCTURE:
+
+WebApp/
+│
+├── Controllers/
+│   └── StudentsController.cs
+│
+├── Models/
+│   └── Student.cs
+│
+├── Data/
+│   └── AppDbContext.cs
+│
+├── Views/
+│   └── Students/
+│       ├── Index.cshtml
+│       ├── Create.cshtml
+│       ├── Edit.cshtml
+│       ├── Delete.cshtml
+│       └── Details.cshtml
+│
+├── appsettings.json
+├── Program.cs
+├── WebApp.csproj
+
+---
+
+## FILE: Models/Student.cs
+
+using System.ComponentModel.DataAnnotations;
+
+namespace WebApp.Models
+{
+public class Student
+{
+public int Id { get; set; }
+
+```
+    [Required]
+    public string Name { get; set; }
+
+    public int Age { get; set; }
+}
+```
+
+}
+
+---
+
+## FILE: Data/AppDbContext.cs
+
+using Microsoft.EntityFrameworkCore;
+using WebApp.Models;
+
+namespace WebApp.Data
+{
+public class AppDbContext : DbContext
+{
+public AppDbContext(DbContextOptions<AppDbContext> options)
+: base(options)
+{
+}
+
+```
+    public DbSet<Student> Students { get; set; }
+}
+```
+
+}
+
+---
+
+## FILE: appsettings.json
+
+{
+"ConnectionStrings": {
+"DefaultConnection": "Server=(localdb)\MSSQLLocalDB;Database=StudentDB;Trusted_Connection=True;"
+}
+}
+
+---
+
+## FILE: Program.cs
+
+using Microsoft.EntityFrameworkCore;
+using WebApp.Data;
+
+var builder = WebApplication.CreateBuilder(args);
+
+builder.Services.AddControllersWithViews();
+
+builder.Services.AddDbContext<AppDbContext>(options =>
+options.UseSqlServer(builder.Configuration.GetConnectionString("DefaultConnection")));
+
+var app = builder.Build();
+
+app.UseStaticFiles();
+app.UseRouting();
+
+app.MapControllerRoute(
+name: "default",
+pattern: "{controller=Students}/{action=Index}/{id?}");
+
+app.Run();
+
+---
+
+## FILE: Controllers/StudentsController.cs
+
+using Microsoft.AspNetCore.Mvc;
+using WebApp.Data;
+using WebApp.Models;
+using System.Linq;
+
+namespace WebApp.Controllers
+{
+public class StudentsController : Controller
+{
+private readonly AppDbContext _context;
+
+```
+    public StudentsController(AppDbContext context)
+    {
+        _context = context;
+    }
+
+    public IActionResult Index()
+    {
+        return View(_context.Students.ToList());
+    }
+
+    public IActionResult Create()
+    {
+        return View();
+    }
+
+    [HttpPost]
+    public IActionResult Create(Student student)
+    {
+        _context.Students.Add(student);
+        _context.SaveChanges();
+        return RedirectToAction("Index");
+    }
+
+    public IActionResult Edit(int id)
+    {
+        var student = _context.Students.Find(id);
+        return View(student);
+    }
+
+    [HttpPost]
+    public IActionResult Edit(Student student)
+    {
+        _context.Students.Update(student);
+        _context.SaveChanges();
+        return RedirectToAction("Index");
+    }
+
+    public IActionResult Delete(int id)
+    {
+        var student = _context.Students.Find(id);
+        return View(student);
+    }
+
+    [HttpPost, ActionName("Delete")]
+    public IActionResult DeleteConfirmed(int id)
+    {
+        var student = _context.Students.Find(id);
+        _context.Students.Remove(student);
+        _context.SaveChanges();
+        return RedirectToAction("Index");
+    }
+
+    public IActionResult Details(int id)
+    {
+        var student = _context.Students.Find(id);
+        return View(student);
+    }
+}
+```
+
+}
+
+---
+
+## VIEWS (BASIC VERSIONS)
+
+## FILE: Views/Students/Index.cshtml
+
+@model List<WebApp.Models.Student>
+
+<h2>Students</h2>
+<a href="/Students/Create">Create New</a>
+
+<table>
+    <tr>
+        <th>Name</th>
+        <th>Age</th>
+        <th>Actions</th>
+    </tr>
+
+```
+@foreach (var s in Model)
+{
+    <tr>
+        <td>@s.Name</td>
+        <td>@s.Age</td>
+        <td>
+            <a href="/Students/Details/@s.Id">Details</a> |
+            <a href="/Students/Edit/@s.Id">Edit</a> |
+            <a href="/Students/Delete/@s.Id">Delete</a>
+        </td>
+    </tr>
+}
+```
+
+</table>
+
+---
+
+## FILE: Views/Students/Create.cshtml
+
+@model WebApp.Models.Student
+
+<h2>Create Student</h2>
+
+<form method="post">
+    Name: <input asp-for="Name" /><br />
+    Age: <input asp-for="Age" /><br />
+    <button type="submit">Create</button>
+</form>
+
+---
+
+## FILE: Views/Students/Edit.cshtml
+
+@model WebApp.Models.Student
+
+<h2>Edit Student</h2>
+
+<form method="post">
+    <input type="hidden" asp-for="Id" />
+    Name: <input asp-for="Name" /><br />
+    Age: <input asp-for="Age" /><br />
+    <button type="submit">Save</button>
+</form>
+
+---
+
+## FILE: Views/Students/Delete.cshtml
+
+@model WebApp.Models.Student
+
+<h2>Delete Student</h2>
+
+<p>Are you sure?</p>
+<p>@Model.Name - @Model.Age</p>
+
+<form method="post">
+    <button type="submit">Delete</button>
+</form>
+
+---
+
+## FILE: Views/Students/Details.cshtml
+
+@model WebApp.Models.Student
+
+<h2>Details</h2>
+
+<p>Name: @Model.Name</p>
+<p>Age: @Model.Age</p>
+
+<a href="/Students/Index">Back</a>
+
+---
+
+## DATABASE SETUP (VERY IMPORTANT)
+
+Run in Package Manager Console:
+
+Add-Migration InitialCreate
+Update-Database
+
+---
+
+## HOW IT WORKS:
+
+* Create → adds student to DB
+* Index → shows all students
+* Edit → updates student
+* Delete → removes student
+* Details → shows single record
+
+---
+
+## OUTPUT (from your PDF pages 4–5):
+
+* Index page with student list
+* Create form (Name, Age)
+* Details page
+* Edit page
+* Delete confirmation
+
+---
+
+## END

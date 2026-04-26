@@ -1,0 +1,118 @@
+PROJECT: ASP.NET Core MVC – Form Handling Example
+
+FILE STRUCTURE:
+
+WebApp/
+│
+├── Controllers/
+│   └── HomeController.cs
+│
+├── Views/
+│   ├── Home/
+│   │   └── Index.cshtml
+│   │
+│   └── Shared/
+│       └── _Layout.cshtml   (auto-generated, no need to modify)
+│
+├── wwwroot/                (static files - optional)
+│
+├── Program.cs
+├── appsettings.json
+├── WebApp.csproj
+
+---
+
+## FILE: Controllers/HomeController.cs
+
+using Microsoft.AspNetCore.Mvc;
+
+namespace WebApp.Controllers
+{
+public class HomeController : Controller
+{
+[HttpGet]
+public IActionResult Index()
+{
+return View();
+}
+
+```
+    [HttpPost]
+    public IActionResult Index(string name)
+    {
+        ViewBag.Message = "Hello, " + name + "!";
+        return View();
+    }
+}
+```
+
+}
+
+---
+
+## FILE: Views/Home/Index.cshtml
+
+@{
+ViewBag.Title = "Home";
+}
+
+<h2>Enter Your Name</h2>
+
+<form method="post">
+    <input type="text" name="name" placeholder="Enter name" required />
+    <button type="submit">Submit</button>
+</form>
+
+@if (ViewBag.Message != null)
+{ <h3>@ViewBag.Message</h3>
+}
+
+---
+
+## FILE: Program.cs
+
+var builder = WebApplication.CreateBuilder(args);
+
+// Add MVC services
+builder.Services.AddControllersWithViews();
+
+var app = builder.Build();
+
+// Middleware
+app.UseStaticFiles();
+app.UseRouting();
+
+// Routing
+app.MapControllerRoute(
+name: "default",
+pattern: "{controller=Home}/{action=Index}/{id?}"
+);
+
+app.Run();
+
+---
+
+## HOW IT WORKS:
+
+1. User opens app → /Home/Index
+2. GET method loads the form
+3. User enters name and clicks submit
+4. POST method receives "name"
+5. Controller sets ViewBag.Message
+6. View displays: Hello, <name>!
+
+---
+
+## IMPORTANT NOTES:
+
+* Index.cshtml MUST be inside:
+  Views/Home/
+
+* AddControllersWithViews() is required
+
+* Project type must be:
+  ASP.NET Core Web App (Model-View-Controller)
+
+---
+
+## END
